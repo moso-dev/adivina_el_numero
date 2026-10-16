@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="icono.png">
+    <title>El Número Oculto</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+        /* font-family: "VT323", monospace; */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        *::selection {
+            background-color: rgb(128, 128, 128, 0.5);
+            color: rgb(226, 226, 226);
+        }
+        .container {
+            position: relative;
+        }
+
+        body {
+            font-family: "VT323", monospace;
+            color: white;
+            background-color: black;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 2rem;
+            font-size: 5rem;
+        }
+
+        h2 {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 1rem auto;
+            font-size: 2rem;
+            text-decoration: dashed underline 2px white;
+        }
+
+        .box {
+            margin: 6rem 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        #out_oculto {
+            font-family: "VT323", monospace;
+            text-align: center;
+            color: white;
+            font-size: 3rem;
+            border: 2px solid black;
+            background-color: #808080;
+        }
+
+        #pista {
+            font-size: 2rem;
+        }
+        
+        #in_num {
+            font-family: "VT323", monospace;
+            font-size: 2.5rem;
+            text-align: center;
+            border: 2px solid black;
+            background-color: #808080;
+            color: whitesmoke;
+        }
+
+        #in_num:focus {
+            outline: 3px solid rgb(128, 128, 128, 0.5);
+        }
+
+        #btn_num {
+            font-family: "VT323", monospace;
+            color: white;
+            background-color: #808080;
+            border: 2px solid black;
+            font-size: 2rem;
+            padding: 0.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all linear 0.3s;
+        }
+        
+        #btn_num:hover {
+            text-shadow: 3px 1px 4px rgb(255, 255, 255, 0.25);
+        }
+        
+        #btn_num:active, #btn_cerrar:active {
+            transform: scale(0.9);
+        }
+        
+        #ventana_emergente {
+            position: absolute;
+            background-color: black;
+            border: 5px solid white;
+            width: 50%;
+            top: 70%;
+            left: 50%;
+            padding: 1rem;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            z-index: 999;
+        }
+        
+        #ventana_emergente p {
+            font-size: 3rem;
+        }
+        
+        #btn_cerrar {
+            background-color: red;
+            color: white;
+            font-family: "VT323", monospace;
+            font-size: 2.5rem;
+            padding: 0 0.5rem;
+            border: 2px solid rgb(0, 0, 0, 0.7);
+            cursor: pointer;
+            transition: all ease 0.3s;
+        }
+        
+        #btn_cerrar:hover {
+            box-shadow: 0px 0px 10px red;
+        }
+        .texto {
+            text-align: center;
+        }
+        .p-intentos {
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <div id="ventana_emergente">
+            <div class="texto">
+                <p id="mensaje"></p>
+                <p id="p_ventana"></p>
+            </div>
+            <button id="btn_cerrar">X</button>
+        </div>
+
+        <header>
+            <h1>El Juego del Numero Oculto</h1>
+        </header>
+
+        <main>
+            <h2>
+                <span>Se acaba de generar un Numero Oculto</span>
+                <span>Intenta acertarlo!!</span>
+            </h2>
+
+            <div class="box">
+                <input type="text" disabled="true" placeholder="?" id="out_oculto" size="3">
+                <p id="pista">Pista : <span id="pista_estado">No Disponible</span></p>
+                <label for="in_num" style="text-align: center;">Introduce un numero<br>↓</label>
+                <input type="number" size="3" min="0" max="100" id="in_num">
+                <button id="btn_num">Comprobar</button>
+                <p class="p-intentos">Intentos Restantes: <span id="intentos"></span></p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const OUT_OCULTO = document.getElementById('out_oculto');
+        const PISTA = document.getElementById('pista_estado');
+        const INPUT = document.getElementById('in_num');
+        const BOTON = document.getElementById('btn_num');
+        const VENTANA = document.getElementById('ventana_emergente');
+        const BTN_CERRAR = document.getElementById('btn_cerrar');
+        const MENSAJE = document.getElementById('mensaje');
+        const INTENTOS = document.getElementById('intentos');
+        const MOSTRAR_NUM = document.getElementById('p_ventana');
+
+        let intentos = 10;
+        let numero_oculto;
+        let in_numero;
+        let distancia;
+
+        function generaNumeroAleatorio() {
+            numero_oculto = parseInt(Math.random() * 100);
+            console.log('El numero oculto es: ' + numero_oculto);
+        }
+
+        function actualizarIntentos() {
+            if (intentos === 0 && numero_oculto !== in_numero) {
+                INTENTOS.textContent = intentos
+                OUT_OCULTO.value = numero_oculto;
+                VENTANA.style.display = 'flex';
+                MENSAJE.textContent = 'Has gastado todos tus intentos asi que FALLASTE';
+                MOSTRAR_NUM.textContent = `Era el nº${numero_oculto}`
+                PISTA.textContent = 'No Disponible';
+                BOTON.onclick = reiniciar;
+                BOTON.textContent = 'Reiniciar';
+                INPUT.disabled = true;
+            } else {
+                INTENTOS.textContent = intentos;
+            }
+        }
+        
+        function comprobarNumero() {
+            intentos--;
+            in_numero = parseInt(INPUT.value);
+            distancia = Math.abs(numero_oculto - in_numero)
+            
+            if (numero_oculto === in_numero) {
+                OUT_OCULTO.value = numero_oculto;
+                VENTANA.style.display = 'flex';
+                MENSAJE.textContent = 'Victoriaa!! Has Acertado El Numero Oculto';
+                MOSTRAR_NUM.textContent = `Era el nº${numero_oculto}`
+                PISTA.textContent = 'No Disponible';
+                BOTON.onclick = reiniciar;
+                BOTON.textContent = 'Reiniciar';
+                INPUT.disabled = true;
+                intentos = 'Has Ganado';
+            } else if (distancia < 6) {
+                PISTA.textContent = 'Estas Muy Cerca';
+            } else if (distancia < 16) {
+                PISTA.textContent = 'Estas Cerca';
+            } else if (distancia < 31) {
+                PISTA.textContent = 'Estas Lejos';
+            } else if (distancia < 101) {
+                PISTA.textContent = 'Estas Muy Lejos';
+            }
+            actualizarIntentos();
+            INPUT.focus();
+        }
+        
+        function reiniciar() {
+            intentos = 10;
+            MENSAJE.textContent = '';
+            MOSTRAR_NUM.textContent = '';
+            INPUT.disabled = false;
+            VENTANA.style.display = 'none';
+            BOTON.onclick = comprobarNumero;
+            BOTON.textContent = 'Comprobar';
+            OUT_OCULTO.value = '?';
+            PISTA.textContent = 'No Disponible';
+            INPUT.value = 0;
+            numero_oculto = '';
+            in_numero = '';
+            distancia = '';
+            generaNumeroAleatorio();
+            actualizarIntentos();
+        }
+        BTN_CERRAR.onclick = () => VENTANA.style.display = 'none';
+        reiniciar();
+    </script>
+</body>
+
+</html>
